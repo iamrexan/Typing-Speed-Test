@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Simple Typing Test</title>
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<style type="text/css">
+		.panel-group {
+		    position: relative;
+		    margin: 60px 212px;
+		    border: 1px solid Grey;
+		    display: none;
+		}
+		.panel.panel-primary {
+		    text-align: left;
+		    padding: 13px 64px;
+		}
+		.panel-heading {
+		    text-align: center;
+		    font-weight: bold;
+		    font-size: 23px;
+		}
+		#avgRes {
+		    padding-left: 69px;
+		    border-top: 2px solid grey;
+		}
+		#loader2 {
+		    padding-top: 35px;
+		}
+		#loader {
+		    background-color: #deded7;
+		    padding: 15px 22px;
+		    margin-bottom: 25px;
+		}
+		#nxtWrd {
+		    position: relative;
+		    margin: 15px 285px;
+		    font-size: 20px;
+		    font-weight: bold;
+		}
+		.title {
+			font-size: 2.5rem;
+			text-align: center;
+			font-weight: Bold;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1 class="title">Simple Typing Test</h1>
+		<div id="loader"></div>
+		<div id="nxtWrd"></div>
+		<div class="input-group input-group-sm mb-3">
+		  <input id="myInput" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+		  <input type="text" name="timingSet" id="timingSet">
+		</div>
+		<button type="button" class="btn btn-primary" id="button">Refresh</button>
+		<div>
+			<div id="loader2"></div>
+		</div>
+		<div class="panel-group" id="resBox">
+		    <div class="panel panel-primary">
+		      <div class="panel-heading">Result</div>
+		      <div class="panel-body" id="wpmRes"></div>
+		      <div class="panel-body" id="avgRes"></div>
+		    </div>
+		</div>
+	</div>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript">
+		let startTime=0, endTime=0,perMin=60;
+		var button = document.getElementById('button');
+		var timingSet = document.getElementById('timingSet');
+		button.addEventListener('click', xmlreq);
+		window.addEventListener('load', xmlreq);
+
+		var editBoxValue = document.getElementById('myInput');
+		var arr = [];
+		var watcher = window.setInterval(function() {
+			var today = new Date();
+			var currentTime = today.getMinutes()+":"+today.getSeconds();
+			if (today.getMinutes() === 0) {
+				currentTime = 60+":"+today.getSeconds();
+			}
+			if (startTime != 0) {
+				document.getElementById('timingSet').value = perMin;
+				perMin = perMin - 1;
+			}
+			if (currentTime == endTime) {
+				editBoxValue.setAttribute('disabled', 'true');
+				editBoxValue.value = '';
+				document.getElementById('timingSet').setAttribute('disabled', 'true');
+				res = textWraper();
+				var avg = wpmcalc(res[0].original, res[0].typed);
+				document.getElementById('resBox').setAttribute('style', 'display:block');
+				document.getElementById('wpmRes').innerText = "Words Per Minute: " +arr.length;
+				document.getElementById('avgRes').innerText = "Average: " +avg;
+				clearAll();
+			}
+		}, 1000);
+		var i =0;
+		document.getElementById('myInput').addEventListener('keyup', function(event) {
+			var editBoxValue = document.getElementById('myInput');
+			var nextWord = '';
+			if (event.keyCode == 32) {
+				x = document.getElementById('loader').innerText.split(' ');
+				if (document.getElementById('loader2').innerText != '') {
+					y = document.getElementById('loader2').innerText.split(' ');
+				} else {
+					y = document.getElementById('loader2').innerText = '';
+				}
+				var nextWord =  x[y.length+1];
+				document.getElementById('nxtWrd').innerText = "Next Word: "+ nextWord;
+				if (this.value.trim() == x[y.length]) {
+					document.getElementById('loader2').innerHTML = document.getElementById('loader2').innerHTML+ "<span style='color:green'>"+ this.value +"</span>";
+				} else {
+					document.getElementById('loader2').innerHTML = document.getElementById('loader2').innerHTML+ "<span style='color:red'>"+ this.value +"</span>";
+				}
+				arr.push(this.value.trim());
+				editBoxValue.value = '';
+			}
+			if (editBoxValue.value.length == 1 && document.getElementById('loader2').innerText == '') {
+				var today = new Date();
+				startTime = today.getMinutes()+":"+today.getSeconds();
+				endTime = today.getMinutes()+1+":"+today.getSeconds();
+				perMin = 60;
+			}
+			if (nextWord != '') {
+				if (nextWord.includes(editBoxValue.value) == false) {
+					document.getElementById('nxtWrd').setAttribute('style', 'color:red');
+				}
+			}
+			var ldr_txt = document.getElementById('loader').innerText;
+			i++;
+		});
+
+		function wpmcalc(originArr, userArr) {
+			let typArr = [], rArr = [];
+			for (var i = userArr.length - 1; i >= 0; i--) {
+				if (userArr[i] === originArr[i]) {
+					typArr.push(userArr[i]);
+				} else {
+					rArr.push(userArr[i]);
+				}
+			}
+			var result = typArr.length/userArr.length * 100;
+			return result;
+		}
+		function textWraper() {
+			r = [{
+				"original": document.getElementById('loader').innerText.split(' '),
+				"typed": document.getElementById('loader2').innerText.split(' ')
+			}];
+			return r;
+		}
+		function xmlreq() {
+			var xhr = new XMLHttpRequest();
+			var btn = document.getElementById('loader');
+			var loader2 = document.getElementById('loader2');
+			btn.innerText = '';
+			loader2.innerText = '';
+			xhr.onreadystatechange = function() {
+			    if (xhr.readyState == xhr.DONE) {
+					btn.append(xhr.responseText);
+					var arr = xhr.responseText.split(' ');
+					aftRefresh();
+			    }
+			}
+			if (timingSet.value != '') {
+				clearAll()
+			}
+			xhr.open("GET", "http://localhost:8081/listUsers/");
+			xhr.send();
+		}
+		function clearAll() {
+			timingSet.value = '';
+			startTime=0, endTime=0,perMin=60;
+			arr = [];
+		}
+		function aftRefresh() {
+			editBoxValue.removeAttribute('disabled');
+			document.getElementById('resBox').removeAttribute('style');
+		}
+		function rjk(arr) {
+			for (var i = arr.length - 1; i >= 0; i--) {
+				if (i = arr.length - 1) {
+					console.log("<span style='color:green'>"+ arr[0] +"</span>")
+				}
+			}
+		}
+	</script>
+</body>
+</html>

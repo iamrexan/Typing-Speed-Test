@@ -1,0 +1,27 @@
+{
+  "name": "rawtype",
+  "version": "1.0.0",
+  "description": "### Version 1.0 ###",
+  "main": "index.js",
+  "dependencies": {
+    "bootstrap": ">=4.3.1",
+    "express": "^4.16.4",
+    "fs": "^0.0.2",
+    "jquery": ">=3.4.0",
+    "popper.js": "^1.14.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamrexan/rawtype.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iamrexan/rawtype/issues"
+  },
+  "homepage": "https://github.com/iamrexan/rawtype#readme"
+}
